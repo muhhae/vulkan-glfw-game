@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <filesystem>
 
 #include <map>
 #include <optional>
@@ -42,7 +43,18 @@ private: //private variables
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
 
+    VkQueue graphicsQueue;
+
+
 private:
+    void initVulkan() 
+    {
+        createInstance();
+        setupDebugMessenger();
+        pickPhysicalDevice();
+        createLogicalDevice();
+    }
+
     void initWindow() 
     {
         glfwInit();
@@ -51,22 +63,21 @@ private:
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
     }
-    void initVulkan() 
-    {
-        createInstance();
-        setupDebugMessenger();
-        pickPhysicalDevice();
-        createLogicalDevice();
-    }
     void mainLoop() 
     {
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            {
+                return;
+            }
         }
     }
     void cleanup() 
     {
+        vkDestroyDevice(device, nullptr);
+
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
@@ -199,9 +210,7 @@ private:
                                                         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                         void* pUserData) 
     {
-
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
+        std::cerr << "\n" << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
     }
     static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
@@ -326,13 +335,56 @@ private:
 
     void createLogicalDevice()
     {
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1;
+
+        float queuePriority = 1.0f;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        
+        VkPhysicalDeviceFeatures deviceFeatures{};
+
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = 1;
+
+        createInfo.pEnabledFeatures = &deviceFeatures;
+
+        createInfo.enabledExtensionCount = 0;
+        if (enableValidationLayers) 
+        {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        }
+        else 
+        {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create logical device!");
+        }
+
+        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     }
+    
 };
 
-
-int main() {
+int main(int arcg, char** argv) 
+{
     HelloTriangleApplication app;
+
+    #ifdef NDEBUG
+        std::string exePath = ((std::string)argv[0]).substr(0, ((std::string)argv[0]).find_last_of("\\/"));
+        std::filesystem::current_path(exePath);
+    #endif 
+
+    std::cout << "workdir : " << std::filesystem::current_path() << std::endl;
 
     try {
         app.run();

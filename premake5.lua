@@ -14,15 +14,19 @@ VK = "D:/Other/VulkanSDK" --Vulkan SDK directory
 VKLIB = "%{VK}/Lib"
 VKINC = "%{VK}/Include"
 
+-- GLFW3 = "" --glfw3 directory
+-- GLFWLIB = "%{GLFW3}/Lib"
+-- GLFWLIB = "%{GLFW3}/Include"
 
 project "App"
-    kind "ConsoleApp" --App Type
     language "C++" --Languange
 
     cppdialect "C++latest"
     links {
-        "glfw3", "%{VKLIB}/vulkan-1", "opengl32"
-    } --link library
+        "glfw3", --change to %{GLFWLIB}/glfw3 if glfw3 is not in the default path 
+        "%{VKLIB}/vulkan-1",
+        "opengl32"
+    } 
 
     includedirs {
         VKINC, 
@@ -35,18 +39,18 @@ project "App"
         "%{SRCDIR}/**.h",
         "%{SRCDIR}/**.hpp", 
         "%{SRCDIR}/**.cpp",
-
-    }
-
-    prebuildcommands { 
-        "rm -rf %{BUILDDIR}/%{OUT}/resource",
-        "{COPYDIR} %{RESFILE} %{BUILDDIR}/%{OUT}/resource" 
     }
 
     filter "configurations:Debug"
+        kind "ConsoleApp" --App Type
         defines { "DEBUG" }
         symbols "On"
 
     filter "configurations:Release"
+        kind "WindowedApp" --App Type
         defines { "NDEBUG" }
         optimize "On"
+        prebuildcommands { 
+            "rm -rf %{BUILDDIR}/%{OUT}/resource",
+            "{COPYDIR} %{RESFILE} %{BUILDDIR}/%{OUT}/resource" 
+        }

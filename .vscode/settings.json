@@ -65,6 +65,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "format": "cpp",
-        "semaphore": "cpp"
-    }
+        "semaphore": "cpp",
+        "codecvt": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }
