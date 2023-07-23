@@ -8,12 +8,13 @@ SRCDIR = "src" --Source Code Directory
 BUILDDIR = "bin" --Build Directory
 OBJDIR = "obj" --Obj Directory
 RESFILE = "resource" --Resource Directory
-OUT = "%{cfg.buildcfg}-%{prj.name}"
+OUT = "%{cfg.buildcfg}"
 
 VK = "D:/Other/VulkanSDK" --Vulkan SDK directory
 VKLIB = "%{VK}/Lib"
 VKINC = "%{VK}/Include"
 
+-- uncomment if glfw3 is nor in the default path
 -- GLFW3 = "" --glfw3 directory
 -- GLFWLIB = "%{GLFW3}/Lib"
 -- GLFWLIB = "%{GLFW3}/Include"
